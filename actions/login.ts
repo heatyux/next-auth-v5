@@ -6,8 +6,8 @@ import { signIn } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { AuthError } from "next-auth";
 import { getUserByEmail } from "@/data/user";
-import { generateVerificationToken } from "@/lib/token";
-import { sendVerificationEmail } from "@/lib/mail";
+import { generateTwoFactorToken, generateVerificationToken } from "@/lib/token";
+import { sendTwoFactorTokenEmail, sendVerificationEmail } from "@/lib/mail";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
   const validatedFields = LoginSchema.safeParse(values);
@@ -16,7 +16,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     return { error: "Invalid fields" };
   }
 
-  const { email, password } = validatedFields.data;
+  const { email, password, code } = validatedFields.data;
 
   const existingUser = await getUserByEmail(email);
 
@@ -32,6 +32,18 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     await sendVerificationEmail(existingUser.email, verificationToken.token);
 
     return { success: "Confirmation email sent!" };
+  }
+
+  if (existingUser.isTwoFactorEnabled && existingUser.email) {
+    if (code) {
+      // TODO: 2FA check
+    } else {
+      const twoFactorTokwn = await generateTwoFactorToken(existingUser.email);
+
+      await sendTwoFactorTokenEmail(twoFactorTokwn.email, twoFactorTokwn.token);
+
+      return { twoFactor: true };
+    }
   }
 
   try {

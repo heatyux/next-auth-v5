@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
-import { LoginForm } from "./auth/login-form";
+} from "@/components/ui/dialog";
+import { LoginForm } from "./login-form";
 
 type LoginButtonProps = {
   children: React.ReactNode;
